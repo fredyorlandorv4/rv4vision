@@ -98,8 +98,8 @@ Convierte un archivo PDF en imágenes `.jpg`, corrige la orientación y devuelve
 ```
 .
 ├── cliente123/
-│   └── archivo.pdf
-│   └── archivo/
+│   └── nombre_archivo.pdf
+│   └── nombre_archivo/
 │       └── img/
 │           ├── page0.jpg
 │           ├── page1.jpg
@@ -126,6 +126,3 @@ Asegúrate de que `main.py` sea el nombre de tu archivo principal (ajusta si es 
 
 ---
 
-## 📬 Contribuciones
-
-¡Se agradecen las mejoras, issues y sugerencias! 🎉
