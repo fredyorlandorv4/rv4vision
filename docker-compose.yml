@@ -1,0 +1,11 @@
+version: '1'
+
+services:
+  # The Application
+  convert_docs_to_images:
+    container_name: convert_docs_to_images
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+      args:
+        environment: prod
