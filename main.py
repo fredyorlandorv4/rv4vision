@@ -1,5 +1,6 @@
-from typing import List
-
+import io
+from typing import List, Tuple, Union
+from deskew import determine_skew
 import cv2
 from fastapi import FastAPI, UploadFile
 
@@ -14,8 +15,7 @@ import pytesseract
 from pytesseract import Output
 import base64
 
-
-
+import re
 
 app = FastAPI()
 
@@ -62,7 +62,7 @@ def image_orientation_corrector(image_path):
     elif results["script"] == 'Bengali':
         angle_rotate=0
     else:
-        angle_rotate=-results["rotate"]
+        angle_rotate=results["rotate"]
     
     # Rotate the image to correct the orientation
     rotated = imutils.rotate_bound(image, angle=angle_rotate)
