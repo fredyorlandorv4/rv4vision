@@ -2,7 +2,7 @@ import io
 from typing import List, Tuple, Union
 from deskew import determine_skew
 import cv2
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile,Form
 
 from pdf2image import convert_from_path
 
@@ -16,6 +16,9 @@ from pytesseract import Output
 import base64
 
 import re
+
+
+import shortuuid
 
 app = FastAPI()
 
@@ -41,7 +44,7 @@ def file_to_base64(file_path):
 def image_orientation_corrector(image_path):
     print(image_path)
     angle_rotate = None
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    #pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"The image at path {image_path} could not be found.")
@@ -70,6 +73,7 @@ def image_orientation_corrector(image_path):
 
 
 def convertPDFToImages(path_file):
+    print(path_file)
     path_img = path_file.split('/')
     doc_name = path_img[1].split('.')
     doc_name = doc_name[0]
@@ -77,7 +81,7 @@ def convertPDFToImages(path_file):
 
     path_images = []
     
-    images = convert_from_path(path_file,poppler_path=r'C:\Program Files\poppler-24.08.0\Library\bin')
+    images = convert_from_path(path_file)
     os.makedirs('{}/{}/img'.format(path_img,doc_name), exist_ok=True)
     for i in range(len(images)):
         images[i].save(path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg', 'JPEG')
@@ -91,15 +95,30 @@ def convertPDFToImages(path_file):
 
 
 @app.post("/files/{id_customer}")
-async def file_contents(files: List[UploadFile],id_customer:str):
+async def file_contents(filedata: str = Form(...), id_customer:str='default_user'):
     results=None
-    for file in files:
+    file_as_bytes = str.encode(filedata)
+    file_recovered = base64.b64decode(file_as_bytes)
+
+    try:
+        file_name_tmp = shortuuid.uuid()
+        os.makedirs(id_customer, exist_ok=True)
+        file_location = f"{id_customer}/{file_name_tmp}.pdf"
+        with open(file_location,'wb') as f:
+            f.write(file_recovered)
+        results = convertPDFToImages(file_location)
+        return {"images": [file_to_base64(i) for i in results]}
+    except ValueError as e:
+        return {"images":[]}
+
+    """for file in files:
         if file.content_type=='application/pdf':
             os.makedirs(id_customer, exist_ok=True)
             file_location = f"{id_customer}/{file.filename}"
             with open(file_location, "wb+") as file_object:
                 file_object.write(file.file.read())
             results=convertPDFToImages(file_location)
-
+    
     print(results)
     return {"images": [file_to_base64(i) for i in results]}
+    """
