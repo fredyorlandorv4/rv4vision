@@ -22,6 +22,22 @@ import shortuuid
 
 app = FastAPI()
 
+def get_file_binary_data(file_path):
+    """
+    Reads a file in binary mode and returns its content as a bytes object.
+    """
+    try:
+        with open(file_path, 'rb') as f:
+            binary_data = f.read()
+        return binary_data
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
 def file_to_base64(file_path):
     try:
         with open(file_path, "rb") as file:
@@ -107,7 +123,7 @@ async def file_contents(filedata: str = Form(...), id_customer:str='default_user
         with open(file_location,'wb') as f:
             f.write(file_recovered)
         results = convertPDFToImages(file_location)
-        return {"images": [file_to_base64(i) for i in results]}
+        return {"images": [get_file_binary_data(i) for i in results]}
     except ValueError as e:
         return {"images":[]}
 
