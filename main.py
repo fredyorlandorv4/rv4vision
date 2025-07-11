@@ -3,24 +3,20 @@ from typing import List, Tuple, Union
 from deskew import determine_skew
 import cv2
 from fastapi import FastAPI, UploadFile,Form
-
 from pdf2image import convert_from_path
-
 import os
-
 import imutils
-
 import pytesseract
-
 from pytesseract import Output
 import base64
-
 import re
-
-
 import shortuuid
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def get_file_binary_data(file_path):
     """
@@ -109,6 +105,31 @@ def convertPDFToImages(path_file):
 
 
 
+def convertPDFToImagesStaticDir(path_file):
+    print(path_file)
+    path_img = path_file.split('/')
+    print(path_img)
+    doc_name = path_img[3].split('.')
+    doc_name = doc_name[0]
+    path_img = path_img[2]
+
+    path_images = []
+    print('********************')
+    print('value path image',path_img)
+    print('********************')
+    
+    images = convert_from_path(path_file)
+    os.makedirs('static/{}/{}/img'.format(path_img,doc_name), exist_ok=True)
+    for i in range(len(images)):
+        images[i].save('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg', 'JPEG')
+        image_orientation_corrector('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg')
+        path_images.append('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg')
+    
+    return path_images
+
+
+
+
 
 @app.post("/files/{id_customer}")
 async def file_contents(filedata: str = Form(...), id_customer:str='default_user'):
@@ -123,18 +144,27 @@ async def file_contents(filedata: str = Form(...), id_customer:str='default_user
         with open(file_location,'wb') as f:
             f.write(file_recovered)
         results = convertPDFToImages(file_location)
-        return {"images": [get_file_binary_data(i) for i in results]}
+        return {"images": [file_to_base64(i) for i in results]}
     except ValueError as e:
         return {"images":[]}
 
-    """for file in files:
-        if file.content_type=='application/pdf':
-            os.makedirs(id_customer, exist_ok=True)
-            file_location = f"{id_customer}/{file.filename}"
-            with open(file_location, "wb+") as file_object:
-                file_object.write(file.file.read())
-            results=convertPDFToImages(file_location)
-    
-    print(results)
-    return {"images": [file_to_base64(i) for i in results]}
-    """
+
+@app.post("/files_with_url/{id_customer}")
+async def file_contents(filedata: str = Form(...), id_customer:str='default_user'):
+    results=None
+    file_as_bytes = str.encode(filedata)
+    file_recovered = base64.b64decode(file_as_bytes)
+
+    try:
+        file_name_tmp = shortuuid.uuid()
+        os.makedirs(f"/static/{id_customer}", exist_ok=True)
+        file_location = f"/static/{id_customer}/{file_name_tmp}.pdf"
+        with open(file_location,'wb') as f:
+            f.write(file_recovered)
+        results = convertPDFToImagesStaticDir(file_location)
+        print(results)
+        return {"images": [i for i in results]}
+    except ValueError as e:
+        return {"images":[]}
+
+
