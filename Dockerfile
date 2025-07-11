@@ -40,6 +40,7 @@ RUN wget https://poppler.freedesktop.org/poppler-21.09.0.tar.xz \
 
 WORKDIR ./
 
+run mkdir static
 
 COPY requirements.txt .
 
