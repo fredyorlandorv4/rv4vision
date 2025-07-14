@@ -149,7 +149,7 @@ async def file_contents(filedata: str = Form(...), id_customer:str='default_user
         return {"images":[]}
 
 
-@app.post("/files_with_url/{id_customer}")
+@app.post("/docs_files_with_url/{id_customer}")
 async def file_contents(filedata: str = Form(...), id_customer:str='default_user'):
     results=None
     file_as_bytes = str.encode(filedata)
@@ -168,3 +168,18 @@ async def file_contents(filedata: str = Form(...), id_customer:str='default_user
         return {"images":[]}
 
 
+
+@app.post("/images_files_with_url/{id_customer}")
+async def file_contents(filedata: str = Form(...), id_customer:str='default_user'):
+    
+    file_as_bytes = str.encode(filedata)
+    file_recovered = base64.b64decode(file_as_bytes)
+    try:
+        file_name_tmp = shortuuid.uuid()
+        os.makedirs(f"/static/{id_customer}", exist_ok=True)
+        file_location = f"/static/{id_customer}/{file_name_tmp}.jpg"
+        with open(file_location,'wb') as f:
+            f.write(file_recovered)
+        return {"images": [file_location]}
+    except ValueError as e:
+        return {"images":[]}
