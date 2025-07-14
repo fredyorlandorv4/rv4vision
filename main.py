@@ -106,24 +106,21 @@ def convertPDFToImages(path_file):
 
 
 def convertPDFToImagesStaticDir(path_file):
-    print(path_file)
+    #print(path_file)
     path_img = path_file.split('/')
-    print(path_img)
+    #print(path_img)
     doc_name = path_img[3].split('.')
     doc_name = doc_name[0]
     path_img = path_img[2]
 
     path_images = []
-    print('********************')
-    print('value path image',path_img)
-    print('********************')
     
     images = convert_from_path(path_file)
     os.makedirs('static/{}/{}/img'.format(path_img,doc_name), exist_ok=True)
     for i in range(len(images)):
         images[i].save('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg', 'JPEG')
         image_orientation_corrector('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg')
-        path_images.append('static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg')
+        path_images.append('/static/'+path_img+'/'+doc_name+'/img/page'+ str(i) +'.jpg')
     
     return path_images
 
